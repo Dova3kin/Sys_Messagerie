@@ -9,7 +9,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class Client {
-    private final String tel;
+    private String tel;
     private String nom;
     private String prenom;
     private String dossierPerso;
@@ -18,21 +18,30 @@ public class Client {
     private static String telRegex = "^0[0-9]{9}$";
     private static Pattern pattern = Pattern.compile(telRegex);
 
-    public Client(String tel) throws Exception {
+    public Client() {
+    }
+
+    public void setClient(String tel) throws ClientAlreadyExistException {
         this.tel = tel;
         String dossierPerso = "CLIENT/" + tel;
         try {
-            Path path = Paths.get(dossierPerso);
-            Files.createDirectory(path);
-            System.out.println("Compte créé avec Succes... Connexion");
+            sendRequest("101"); // 101 : Demande d'inscription
+            String code = getResponse().split(":")[0];
+            if (code.equals("200")) {
+                Path path = Paths.get(dossierPerso);
+                Files.createDirectory(path);
+                System.out.println("Compte créé avec Succes... Connexion");
+            } else if (code.equals("201")) {
+                throw new ClientAlreadyExistException();
+            }
         } catch (FileAlreadyExistsException fae) {
-            throw new Exception("Compte déjà existant !");
+            throw new ClientAlreadyExistException();
         } catch (Exception e) {
             System.out.println(e.getMessage());
         }
     }
 
-    private static boolean connect() {
+    private boolean connect() {
         Socket soc = null;
         try {
             soc = new Socket("localhost", 7770);
@@ -57,58 +66,100 @@ public class Client {
     }
 
     public static void main(String[] args) {
-        Scanner scan = new Scanner(System.in);
-        String idConnexion;
-        boolean connecte = false;
+        Scanner scanner = new Scanner(System.in);
+        String input;
+        boolean identifie = false;
+        Client c = new Client();
 
-        /**
-         * Connexion au serveur ou création du compte
-         */
-        if (connect())
-            while (!connecte) {
+        if (c.connect()) {
+
+            while (!identifie) {
                 System.out.println("Veuillez rentrer votre identifiant (si vous êtes nouveau, rentrez \"n\"");
-                idConnexion = scan.nextLine();
+                input = scanner.nextLine();
 
-                if (idConnexion.equals("n")) {
+                if (input.equals("n")) {
                     System.out.println(
                             "Bienvenue, veuillez rentrer votre numéro dé téléphone, celui-ci deviendra votre identifiant de connexions");
 
-                    while (!connecte) {
-                        idConnexion = scan.nextLine();
-                        Matcher matcher = pattern.matcher(idConnexion);
-
+                    while (!identifie) {
+                        input = scanner.nextLine();
+                        Matcher matcher = pattern.matcher(input);
                         if (matcher.matches()) {
                             try {
-                                Client c = new Client(idConnexion);
-                                c.sendRequest("001");
-                                connecte = true;
-                            } catch (Exception e) {
-                                System.out.println(e.getMessage());
-                                break;
+                                c.setClient(input);
+                            } catch (ClientAlreadyExistException caee) {
+                                System.out.println(caee.getMessage());
                             }
-                        } else {
-                            System.out.println("Veuillez donner un numéro de téléphone avec le format \"0XXXXXXXXX\"");
-                            try {
-                                Thread.sleep(500);
-                            } catch (Exception e) {
-                            }
-                            System.out.print("Numéro de téléphone : ");
                         }
                     }
                 } else {
-                    connecte = true;
+
                 }
-                System.out.println("connecté");
             }
-        else {
-            System.out.println("Serveur hors connexion");
-            try {
-                Thread.sleep(500);
-            } catch (Exception e) {
-            }
-            System.out.println("Veuillez appeler le service de maintenance pour signaler le problème");
+
+        } else {
+            System.out.println("Serveur éteint");
         }
 
     }
+
+    // public static void main(String[] args) {
+    // Scanner scan = new Scanner(System.in);
+    // String idConnexion;
+    // boolean connecte = false;
+
+    // /**
+    // * Connexion au serveur ou création du compte
+    // */
+    // if (connect())
+    // while (!connecte) {
+    // System.out.println("Veuillez rentrer votre identifiant (si vous êtes nouveau,
+    // rentrez \"n\"");
+    // idConnexion = scan.nextLine();
+
+    // if (idConnexion.equals("n")) {
+    // System.out.println(
+    // "Bienvenue, veuillez rentrer votre numéro dé téléphone, celui-ci deviendra
+    // votre identifiant de connexions");
+
+    // while (!connecte) {
+    // idConnexion = scan.nextLine();
+    // Matcher matcher = pattern.matcher(idConnexion);
+
+    // if (matcher.matches()) {
+    // try {
+    // Client c = new Client(idConnexion);
+    // c.sendRequest("001");
+    // connecte = true;
+    // } catch (Exception e) {
+    // System.out.println(e.getMessage());
+    // break;
+    // }
+    // } else {
+    // System.out.println("Veuillez donner un numéro de téléphone avec le format
+    // \"0XXXXXXXXX\"");
+    // try {
+    // Thread.sleep(500);
+    // } catch (Exception e) {
+    // }
+    // System.out.print("Numéro de téléphone : ");
+    // }
+    // }
+    // } else {
+    // connecte = true;
+    // }
+    // System.out.println("connecté");
+    // }
+    // else {
+    // System.out.println("Serveur hors connexion");
+    // try {
+    // Thread.sleep(500);
+    // } catch (Exception e) {
+    // }
+    // System.out.println("Veuillez appeler le service de maintenance pour signaler
+    // le problème");
+    // }
+
+    // }
 
 }
