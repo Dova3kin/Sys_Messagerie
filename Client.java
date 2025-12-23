@@ -23,7 +23,7 @@ public class Client {
 
     public void setClient(String tel) throws ClientAlreadyExistException {
         this.tel = tel;
-        String dossierPerso = "CLIENT/" + tel;
+        dossierPerso = "CLIENT/" + tel;
         try {
             sendRequest("101"); // 101 : Demande d'inscription
             String code = getResponse().split(":")[0];
@@ -35,6 +35,8 @@ public class Client {
                 throw new ClientAlreadyExistException();
             }
         } catch (FileAlreadyExistsException fae) {
+            throw new ClientAlreadyExistException();
+        } catch (ClientAlreadyExistException ce) {
             throw new ClientAlreadyExistException();
         } catch (Exception e) {
             System.out.println(e.getMessage());
@@ -65,6 +67,14 @@ public class Client {
         return tel;
     }
 
+    private static void wait(int i) {
+        try {
+            Thread.sleep(i);
+        } catch (Exception e) {
+            System.out.println(e.getMessage());
+        }
+    }
+
     public static void main(String[] args) {
         Scanner scanner = new Scanner(System.in);
         String input;
@@ -72,31 +82,36 @@ public class Client {
         Client c = new Client();
 
         if (c.connect()) {
-
             while (!identifie) {
                 System.out.println("Veuillez rentrer votre identifiant (si vous êtes nouveau, rentrez \"n\"");
                 input = scanner.nextLine();
-
                 if (input.equals("n")) {
                     System.out.println(
                             "Bienvenue, veuillez rentrer votre numéro dé téléphone, celui-ci deviendra votre identifiant de connexions");
-
                     while (!identifie) {
                         input = scanner.nextLine();
                         Matcher matcher = pattern.matcher(input);
                         if (matcher.matches()) {
                             try {
                                 c.setClient(input);
+                                identifie = true;
                             } catch (ClientAlreadyExistException caee) {
                                 System.out.println(caee.getMessage());
+                                wait(500);
+                                System.out.print("Identifiant : ");
                             }
+                        } else {
+                            System.out.println("Veuillez donner un numéro de téléphone avec le format \"0XXXXXXXXX\"");
+                            try {
+                                Thread.sleep(500);
+                            } catch (Exception e) {
+                            }
+                            System.out.print("Numéro de téléphone : ");
                         }
                     }
                 } else {
-
                 }
             }
-
         } else {
             System.out.println("Serveur éteint");
         }

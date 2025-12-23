@@ -1,5 +1,4 @@
 import java.net.*;
-import java.util.Scanner;
 
 class Serveur {
 
@@ -19,6 +18,5 @@ class Serveur {
         } catch (Exception e) {
             System.out.println(e.getMessage());
         }
-
     }
 }
