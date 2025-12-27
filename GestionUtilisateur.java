@@ -59,7 +59,6 @@ public class GestionUtilisateur implements Runnable {
                 case "001": // 001 : connexion
                     try (Stream<String> lignes = Files.lines(Paths.get("SERVEUR/clients.txt"))) {
                         clientExist = lignes.anyMatch(ligne -> ligne.equals(sender));
-                        System.out.println("sender : " + sender);
                         if (clientExist)
                             reponseServeur.println("200:Connexion réussie");
                         else

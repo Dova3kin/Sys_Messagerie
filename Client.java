@@ -5,7 +5,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Scanner;
-import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class Client {
@@ -15,11 +14,6 @@ public class Client {
     private String dossierPerso;
     private BufferedReader reponseServeur = null;
     private PrintWriter requeteServeur = null;
-    private static String telRegex = "^0[0-9]{9}$";
-    private static Pattern pattern = Pattern.compile(telRegex);
-
-    public Client() {
-    }
 
     /**
      * @param tel
@@ -49,7 +43,7 @@ public class Client {
         }
     }
 
-    private boolean connect() {
+    public boolean connect() {
         Socket soc = null;
         try {
             soc = new Socket("localhost", 7770);
@@ -77,6 +71,10 @@ public class Client {
         return tel;
     }
 
+    public String getPrenom() {
+        return prenom;
+    }
+
     private static void wait(int i) {
         try {
             Thread.sleep(i);
@@ -85,76 +83,64 @@ public class Client {
         }
     }
 
-    public void link(String tel) {
+    public void link(String tel) throws NotFoundClientException {
         sendRequest(tel, "001");
         try {
             if (!getResponse().split(":")[0].equals("200"))
-                System.out.println('a');
+                throw new NotFoundClientException(tel);
         } catch (Exception e) {
             System.out.println(e.getMessage());
         }
     }
 
-    public static void main(String[] args) {
+    private void message() {
         Scanner scanner = new Scanner(System.in);
-        String input;
-        boolean identifie = false;
-        Client c = new Client();
+        String input = "";
+        while (!input.equals("3")) {
+            System.out.println("==========MESSAGE==========");
+            System.out.println("1 : Conversations");
+            System.out.println("2 : Nouvelles conversations");
+            System.out.println("3 : Retour");
+            input = scanner.nextLine();
+            switch (input) {
+                case "1":
 
-        if (c.connect()) {
-            while (!identifie) {
-                System.out.println("Veuillez rentrer votre identifiant (si vous êtes nouveau, rentrez \"n\"");
-                input = scanner.nextLine();
-                if (input.equals("n")) {
-                    System.out.println(
-                            "Bienvenue, veuillez rentrer votre numéro dé téléphone, celui-ci deviendra votre identifiant de connexions");
-                    while (!identifie) {
-                        input = scanner.nextLine();
-                        Matcher matcher = pattern.matcher(input);
-                        if (matcher.matches()) {
-                            try {
-                                c.setClient(input);
-                                identifie = true;
-                            } catch (ClientAlreadyExistException caee) {
-                                System.out.println(caee.getMessage());
-                                wait(500);
-                                System.out.print("Identifiant : ");
-                                input = scanner.nextLine();
-                                matcher = pattern.matcher(input);
-                                if (matcher.matches()) {
-                                    try {
-                                        c.link(input);
-                                        identifie = true;
-                                    } catch (Exception e) {
-                                        System.out.println("link error : " + e.getMessage());
-                                    }
-                                } else {
-                                    System.out.println("Identifiant inconnu");
-                                }
-                            }
-                        } else {
-                            System.out.println("Veuillez donner un numéro de téléphone avec le format \"0XXXXXXXXX\"");
-                            wait(500);
-                            System.out.print("Numéro de téléphone : ");
-                        }
-                    }
-                } else {
-                    Matcher matcher = pattern.matcher(input);
-                    if (matcher.matches()) {
-                        try {
-                            c.link(input);
-                            identifie = true;
-                        } catch (Exception e) {
-                            System.out.println("link error : " + e.getMessage());
-                        }
-                    } else {
-                        System.out.println("Identifiant inconnu");
-                    }
-                }
+                    break;
+                case "2":
+
+                    break;
+                case "3":
+                    break;
+                default:
+                    break;
             }
-        } else {
-            System.out.println("Serveur éteint");
         }
+    }
 
+    public static void main(String[] args) {
+        Client c = new Client();
+        new Connexion(c);
+        System.out.println("Bienvenue " + ((c.getPrenom() != null) ? c.getPrenom() : ""));
+        wait(500);
+        Scanner scanner = new Scanner(System.in);
+        String input = "";
+        while (!input.equals("3")) {
+            System.out.println("==========ACCUEIL==========");
+            System.out.println("1 : Messages");
+            System.out.println("2 : Options");
+            System.out.println("3 : Déconnexion");
+            input = scanner.nextLine();
+            switch (input) {
+                case "1":
+                    c.message();
+                    break;
+                case "2":
+                    break;
+                case "3":
+                    break;
+                default:
+                    break;
+            }
+        }
     }
 }

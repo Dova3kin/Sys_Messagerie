@@ -1,0 +1,80 @@
+import java.util.Scanner;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
+public class Connexion {
+    private static String telRegex = "^0[0-9]{9}$";
+    private static Pattern pattern = Pattern.compile(telRegex);
+
+    public Connexion(Client c) {
+        Scanner scanner = new Scanner(System.in);
+        String input;
+        boolean identifie = false;
+
+        if (c.connect()) {
+            while (!identifie) {
+                System.out.println("Veuillez rentrer votre identifiant (si vous êtes nouveau, rentrez \"n\")");
+                input = scanner.nextLine();
+                if (input.equals("n")) {
+                    System.out.println(
+                            "Bienvenue, veuillez rentrer votre numéro dé téléphone, celui-ci deviendra votre identifiant de connexions");
+                    while (!identifie) {
+                        input = scanner.nextLine();
+                        Matcher matcher = pattern.matcher(input);
+                        if (matcher.matches()) {
+                            try {
+                                c.setClient(input);
+                                identifie = true;
+                            } catch (ClientAlreadyExistException caee) {
+                                System.out.println(caee.getMessage());
+                                wait(500);
+                                System.out.print("Identifiant : ");
+                                input = scanner.nextLine();
+                                matcher = pattern.matcher(input);
+                                if (matcher.matches()) {
+                                    try {
+                                        c.link(input);
+                                        identifie = true;
+                                    } catch (NotFoundClientException nfce) {
+
+                                    }
+                                } else {
+                                    System.out.println("Identifiant inconnu");
+                                    wait(500);
+                                    System.out.println("Identifiant : ");
+                                }
+                            }
+                        } else {
+                            System.out.println("Veuillez donner un numéro de téléphone avec le format \"0XXXXXXXXX\"");
+                            wait(500);
+                            System.out.print("Numéro de téléphone : ");
+                        }
+                    }
+                } else {
+                    Matcher matcher = pattern.matcher(input);
+                    if (matcher.matches()) {
+                        try {
+                            c.link(input);
+                            identifie = true;
+                        } catch (NotFoundClientException e) {
+                        }
+                    } else {
+                        System.out.println("Identifiant inconnu");
+                    }
+                }
+            }
+        } else {
+            System.out.println("Serveur éteint");
+            System.exit(0);
+        }
+
+    }
+
+    private static void wait(int i) {
+        try {
+            Thread.sleep(i);
+        } catch (Exception e) {
+            System.out.println(e.getMessage());
+        }
+    }
+}
