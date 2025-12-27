@@ -21,6 +21,12 @@ public class Client {
     public Client() {
     }
 
+    /**
+     * @param tel
+     * @throws ClientAlreadyExistException
+     *                                     Créer le clien sur le serveur, et créer
+     *                                     un fichier client localement
+     */
     public void setClient(String tel) throws ClientAlreadyExistException {
         this.tel = tel;
         dossierPerso = "CLIENT/" + tel;
@@ -29,8 +35,8 @@ public class Client {
             String code = getResponse().split(":")[0];
             if (code.equals("200")) {
                 Path path = Paths.get(dossierPerso);
-                Files.createDirectory(path);
-                System.out.println("Compte créé avec Succes... Connexion");
+                Files.createDirectories(path);
+                System.out.println("Compte créé avec Succes");
             } else if (code.equals("201")) {
                 throw new ClientAlreadyExistException();
             }
@@ -59,6 +65,10 @@ public class Client {
         requeteServeur.println(getTel() + ":" + code);
     }
 
+    private void sendRequest(String tel, String code) {
+        requeteServeur.println(tel + ":" + code);
+    }
+
     private String getResponse() throws IOException {
         return reponseServeur.readLine();
     }
@@ -70,6 +80,16 @@ public class Client {
     private static void wait(int i) {
         try {
             Thread.sleep(i);
+        } catch (Exception e) {
+            System.out.println(e.getMessage());
+        }
+    }
+
+    public void link(String tel) {
+        sendRequest(tel, "001");
+        try {
+            if (!getResponse().split(":")[0].equals("200"))
+                System.out.println('a');
         } catch (Exception e) {
             System.out.println(e.getMessage());
         }
@@ -99,17 +119,37 @@ public class Client {
                                 System.out.println(caee.getMessage());
                                 wait(500);
                                 System.out.print("Identifiant : ");
+                                input = scanner.nextLine();
+                                matcher = pattern.matcher(input);
+                                if (matcher.matches()) {
+                                    try {
+                                        c.link(input);
+                                        identifie = true;
+                                    } catch (Exception e) {
+                                        System.out.println("link error : " + e.getMessage());
+                                    }
+                                } else {
+                                    System.out.println("Identifiant inconnu");
+                                }
                             }
                         } else {
                             System.out.println("Veuillez donner un numéro de téléphone avec le format \"0XXXXXXXXX\"");
-                            try {
-                                Thread.sleep(500);
-                            } catch (Exception e) {
-                            }
+                            wait(500);
                             System.out.print("Numéro de téléphone : ");
                         }
                     }
                 } else {
+                    Matcher matcher = pattern.matcher(input);
+                    if (matcher.matches()) {
+                        try {
+                            c.link(input);
+                            identifie = true;
+                        } catch (Exception e) {
+                            System.out.println("link error : " + e.getMessage());
+                        }
+                    } else {
+                        System.out.println("Identifiant inconnu");
+                    }
                 }
             }
         } else {
@@ -117,64 +157,4 @@ public class Client {
         }
 
     }
-
-    // public static void main(String[] args) {
-    // Scanner scan = new Scanner(System.in);
-    // String idConnexion;
-    // boolean connecte = false;
-
-    // /**
-    // * Connexion au serveur ou création du compte
-    // */
-    // if (connect())
-    // while (!connecte) {
-    // System.out.println("Veuillez rentrer votre identifiant (si vous êtes nouveau,
-    // rentrez \"n\"");
-    // idConnexion = scan.nextLine();
-
-    // if (idConnexion.equals("n")) {
-    // System.out.println(
-    // "Bienvenue, veuillez rentrer votre numéro dé téléphone, celui-ci deviendra
-    // votre identifiant de connexions");
-
-    // while (!connecte) {
-    // idConnexion = scan.nextLine();
-    // Matcher matcher = pattern.matcher(idConnexion);
-
-    // if (matcher.matches()) {
-    // try {
-    // Client c = new Client(idConnexion);
-    // c.sendRequest("001");
-    // connecte = true;
-    // } catch (Exception e) {
-    // System.out.println(e.getMessage());
-    // break;
-    // }
-    // } else {
-    // System.out.println("Veuillez donner un numéro de téléphone avec le format
-    // \"0XXXXXXXXX\"");
-    // try {
-    // Thread.sleep(500);
-    // } catch (Exception e) {
-    // }
-    // System.out.print("Numéro de téléphone : ");
-    // }
-    // }
-    // } else {
-    // connecte = true;
-    // }
-    // System.out.println("connecté");
-    // }
-    // else {
-    // System.out.println("Serveur hors connexion");
-    // try {
-    // Thread.sleep(500);
-    // } catch (Exception e) {
-    // }
-    // System.out.println("Veuillez appeler le service de maintenance pour signaler
-    // le problème");
-    // }
-
-    // }
-
 }

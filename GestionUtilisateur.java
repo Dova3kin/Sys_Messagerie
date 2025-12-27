@@ -41,7 +41,7 @@ public class GestionUtilisateur implements Runnable {
                          * Rechercher du client dans le fichier
                          */
                         try (Stream<String> lignes = Files.lines(Paths.get("SERVEUR/clients.txt"))) {
-                            clientExist = lignes.anyMatch(ligne -> ligne.split(":")[0].equals(sender));
+                            clientExist = lignes.anyMatch(ligne -> ligne.equals(sender));
                             if (clientExist)
                                 reponseServeur.println("201:Client existant");
                             else {
@@ -57,6 +57,16 @@ public class GestionUtilisateur implements Runnable {
                     }
                     break;
                 case "001": // 001 : connexion
+                    try (Stream<String> lignes = Files.lines(Paths.get("SERVEUR/clients.txt"))) {
+                        clientExist = lignes.anyMatch(ligne -> ligne.equals(sender));
+                        System.out.println("sender : " + sender);
+                        if (clientExist)
+                            reponseServeur.println("200:Connexion réussie");
+                        else
+                            reponseServeur.println("202:Client introuvable");
+                    } catch (Exception e) {
+                        System.out.println(e.getMessage());
+                    }
                     System.out.println(sender + " connecté");
                     break;
                 default:
@@ -81,7 +91,7 @@ public class GestionUtilisateur implements Runnable {
             }
             System.out.println(ligne.split(":")[0] + ":déconnexion");
         } catch (Exception e) {
-            System.out.println("e.getMessage() baba");
+            System.out.println("run erreur " + e.getMessage());
         }
     }
 
