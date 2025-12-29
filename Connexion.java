@@ -36,10 +36,11 @@ public class Connexion {
                                         c.link(input);
                                         identifie = true;
                                     } catch (NotFoundClientException nfce) {
-
+                                        System.out.println("Identifiant inconnu");
                                     }
                                 } else {
-                                    System.out.println("Identifiant inconnu");
+                                    System.out.println(
+                                            "Veuillez donner un numéro de téléphone avec le format \"0XXXXXXXXX\"");
                                     wait(500);
                                     System.out.println("Identifiant : ");
                                 }
@@ -51,15 +52,22 @@ public class Connexion {
                         }
                     }
                 } else {
-                    Matcher matcher = pattern.matcher(input);
-                    if (matcher.matches()) {
-                        try {
-                            c.link(input);
-                            identifie = true;
-                        } catch (NotFoundClientException e) {
+                    while (!identifie) {
+                        Matcher matcher = pattern.matcher(input);
+                        if (matcher.matches()) {
+                            try {
+                                c.link(input);
+                                identifie = true;
+                            } catch (NotFoundClientException e) {
+                                System.out.println("Identifiant inconnu");
+                                break;
+                            }
+                        } else {
+                            System.out.println("Veuillez donner un numéro de téléphone avec le format \"0XXXXXXXXX\"");
+                            wait(500);
+                            System.out.print("Numéro de téléphone : ");
+                            input = scanner.nextLine();
                         }
-                    } else {
-                        System.out.println("Identifiant inconnu");
                     }
                 }
             }
