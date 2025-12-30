@@ -10,11 +10,12 @@ import java.util.Scanner;
 public class Client implements Serializable {
     private static final long serialVersionUID = 1L;
     private String tel, nom, prenom, dossierPerso;
-    private ArrayList<String> conversations = new ArrayList<>();
+    private ArrayList<String> conversations = new ArrayList<>(); // Numéro de téléphone avec qui le client à déjà parlé
+    private transient ArrayList<Client> allClient = null;
+    private transient String codeInscriptionRecu = null;
     private transient Socket soc = null;
-    private transient BufferedReader reponseServeur = null;
-    private transient PrintWriter requeteServeur = null;
-    private transient ObjectInputStream ois = null;
+    private transient ObjectInputStream reponseServeur = null;
+    private transient ObjectOutputStream requeteServeur = null;
 
     /**
      * @param tel
@@ -22,105 +23,105 @@ public class Client implements Serializable {
      */
     public void setClient(String tel) throws ClientAlreadyExistException {
         this.tel = tel;
-        dossierPerso = "CLIENT/" + tel;
+        this.dossierPerso = "CLIENT/" + tel;
+        this.codeInscriptionRecu = null;
+
         try {
-            sendRequest("101"); // 101 : Demande d'inscription
-            String code = getResponse().split(":")[0];
-            if (code.equals("200")) {
+            // On envoie un Paquet avec le code 101 et le numéro de téléphone
+            sendPaquet("101", tel);
+
+            // Boucle d'attente
+            int timeout = 0;
+            while (codeInscriptionRecu == null && timeout < 30) {
+                Thread.sleep(100);
+                timeout++;
+            }
+
+            if (codeInscriptionRecu == null) {
+                System.out.println("Le serveur ne répond pas.");
+                return;
+            }
+
+            // Analyse de la réponse reçue par le thread
+            if (codeInscriptionRecu.equals("200")) {
                 Path path = Paths.get(dossierPerso);
                 Files.createDirectories(path);
-                System.out.println("Compte créé avec Succes");
-            } else if (code.equals("201")) {
+                System.out.println("Compte créé avec Succès");
+            } else if (codeInscriptionRecu.equals("201")) {
                 throw new ClientAlreadyExistException();
             }
-        } catch (FileAlreadyExistsException fae) {
-            throw new ClientAlreadyExistException();
-        } catch (ClientAlreadyExistException ce) {
-            throw new ClientAlreadyExistException();
-        } catch (Exception e) {
-            System.out.println(e.getMessage());
+
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        } catch (IOException e) {
+            System.out.println("Erreur lors de la création du dossier : " + e.getMessage());
+        } finally {
+            codeInscriptionRecu = null; // On nettoie pour la prochaine fois
+        }
+    }
+
+    public void link(String tel) throws NotFoundClientException {
+        this.tel = null;
+        sendPaquet("001", tel);
+
+        /**
+         * Boucle d'attente : on attend que le Thread LecteurMessages reçoive le Paquet
+         * "200" et mette à jour le tel.
+         */
+        int timeout = 0;
+        while (this.tel == null && timeout < 10) {
+            try {
+                Thread.sleep(100);
+                timeout++;
+            } catch (InterruptedException e) {
+            }
+        }
+        if (this.tel == null) {
+            throw new NotFoundClientException(tel);
         }
     }
 
     public boolean connect() {
         try {
             soc = new Socket("localhost", 7770);
-            reponseServeur = new BufferedReader(new InputStreamReader(soc.getInputStream()));
-            requeteServeur = new PrintWriter(soc.getOutputStream(), true);
-            ois = new ObjectInputStream(soc.getInputStream());
+            requeteServeur = new ObjectOutputStream(soc.getOutputStream());
+            requeteServeur.flush();
+            reponseServeur = new ObjectInputStream(soc.getInputStream());
+
+            Thread t = new Thread(new LecteurMessages(this));
+            t.setDaemon(true);
+            t.start();
+
             return true;
         } catch (IOException e) {
             return false;
         }
     }
 
-    public void sendRequest(String code) {
-        requeteServeur.println(getTel() + ":" + code);
+    public synchronized void sendPaquet(String code, Object contenu) {
+        try {
+            Paquet p = new Paquet(code, contenu);
+            requeteServeur.writeObject(p);
+            requeteServeur.flush();
+            requeteServeur.reset();
+        } catch (IOException e) {
+            System.out.println("Erreur d'envoi : " + e.getMessage());
+        }
     }
 
-    public void sendRequest(String code, Client recepteur, String message) {
-        requeteServeur.println(getTel() + ":" + code + ":" + recepteur + ":" + message);
-    }
-
-    public void sendRequest(String tel, String code) {
-        requeteServeur.println(tel + ":" + code);
-    }
-
-    public String getResponse() throws IOException {
-        return reponseServeur.readLine();
-    }
-
-    public ObjectInputStream getObjectResponse() throws IOException {
-        return ois;
+    public synchronized void sendPaquet(String code) {
+        try {
+            Paquet p = new Paquet(code);
+            requeteServeur.writeObject(p);
+            requeteServeur.flush();
+            requeteServeur.reset();
+        } catch (IOException e) {
+            System.out.println("Erreur d'envoi : " + e.getMessage());
+        }
     }
 
     public String getTel() {
         return tel;
-    }
-
-    public String getPrenom() {
-        return (prenom == null) ? "" : prenom;
-    }
-
-    public String getNom() {
-        return (nom == null) ? "" : nom;
-    }
-
-    public ArrayList<String> getConv() {
-        return conversations;
-    }
-
-    public Socket getSocket() {
-        return soc;
-    }
-
-    private static void wait(int i) {
-        try {
-            Thread.sleep(i);
-        } catch (Exception e) {
-            System.out.println(e.getMessage());
-        }
-    }
-
-    public void link(String tel) throws NotFoundClientException {
-        sendRequest(tel, "001"); // Envoie la demande de connexion
-        try {
-            String reponse = getResponse();
-            String[] data = reponse.split(":");
-            String code = data[0];
-
-            if (code.equals("200")) {
-                this.tel = tel;
-                if (data.length > 2) {
-                    this.nom = data[1];
-                    this.prenom = data[2];
-                }
-            } else {
-                throw new NotFoundClientException(tel);
-            }
-        } catch (IOException ioe) {
-            System.out.println(ioe.getMessage());
-        }
     }
 
     public void setTel(String tel) {
@@ -128,14 +129,55 @@ public class Client implements Serializable {
         this.dossierPerso = "CLIENT/" + tel;
     }
 
-    private void message() {
+    public String getPrenom() {
+        return (prenom == null) ? "" : prenom;
+    }
+
+    public void setPrenom(String prenom) {
+        this.prenom = prenom;
+    }
+
+    public String getNom() {
+        return (nom == null) ? "" : nom;
+    }
+
+    public void setNom(String nom) {
+        this.nom = nom;
+    }
+
+    public ArrayList<String> getConv() {
+        return conversations;
+    }
+
+    public void setAllClient(ArrayList<Client> liste) {
+        this.allClient = liste;
+    }
+
+    public ArrayList<Client> getAllClient() {
+        return allClient;
+    }
+
+    public void setCodeInscriptionRecu(String code) {
+        this.codeInscriptionRecu = code;
+    }
+
+    public ObjectInputStream getResponseServeru() {
+        return reponseServeur;
+    }
+
+    public Socket getSocket() {
+        return soc;
+    }
+
+    public void message() {
         Scanner scanner = new Scanner(System.in);
         String input = "";
         while (!input.equals("3")) {
             System.out.println("==========MESSAGE==========");
             System.out.println("1 : Conversations");
             System.out.println("2 : Nouvelles conversations");
-            System.out.println("3 : Retour");
+            System.out.println("3 : Retour\n");
+            System.out.print(">");
             input = scanner.nextLine();
             Chat chat = new Chat(this);
             switch (input) {
@@ -158,38 +200,4 @@ public class Client implements Serializable {
         return tel + (prenom != null ? " " + prenom : "") + " " + (nom != null ? nom : "");
     }
 
-    public static void main(String[] args) {
-        Client c = new Client();
-        new Connexion(c);
-        System.out.println("Bienvenue " + (c.getPrenom() != null ? c.getPrenom() : ""));
-        wait(500);
-        Scanner scanner = new Scanner(System.in);
-        String input = "";
-        while (!input.equals("4")) {
-            System.out.println("==========ACCUEIL==========");
-            System.out.println("1 : Messages");
-            System.out.println("2 : Notifications");
-            System.out.println("3 : Options");
-            System.out.println("4 : Déconnexion");
-            input = scanner.nextLine();
-            switch (input) {
-                case "1":
-                    c.message();
-                    break;
-                case "2":
-                    break;
-                case "3":
-                    break;
-                case "4":
-                    try {
-                        c.getSocket().close();
-                    } catch (IOException ioe) {
-                        System.out.println(ioe.getMessage());
-                    }
-                    break;
-                default:
-                    break;
-            }
-        }
-    }
 }

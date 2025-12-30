@@ -1,25 +1,41 @@
-import java.io.BufferedReader;
-import java.io.IOException;
+import java.util.ArrayList;
 
 public class LecteurMessages implements Runnable {
-    private BufferedReader in;
+    private Client client;
 
-    public LecteurMessages(BufferedReader in) {
-        this.in = in;
+    public LecteurMessages(Client c) {
+        client = c;
     }
 
     @Override
     public void run() {
         try {
-            String message;
-            // Cette boucle attend les messages du serveur sans bloquer le reste du
-            // programme
-            while ((message = in.readLine()) != null) {
-                System.out.println("\n[MESSAGE REÇU] : " + message);
-                System.out.print("> "); // Réaffiche le curseur pour l'utilisateur
+            while (true) {
+                Paquet p = (Paquet) client.getResponseServeru().readObject();
+                switch (p.code) {
+                    case "101_REP":
+                        client.setCodeInscriptionRecu((String) p.contenu);
+                        break;
+                    case "001_REP": // Réponse à la demande d'infos (link)
+                        if (p.contenu != null) {
+                            Client infos = (Client) p.contenu;
+                            client.setTel(infos.getTel());
+                            client.setPrenom(infos.getPrenom());
+                            client.setNom(infos.getNom());
+                        }
+                        break;
+
+                    case "300_REP": // Réponse à la demande de liste
+                        ArrayList<Client> liste = (ArrayList<Client>) p.contenu;
+                        client.setAllClient(liste); //
+                        break;
+
+                    case "MSG_RECU": // Un vrai message de chat
+                        System.out.println("\n" + p.contenu);
+                        break;
+                }
             }
-        } catch (IOException ioe) {
-            System.out.println("Connexion fermée par le serveur.");
-        }
+        } catch (Exception e) {
+            /* ... */ }
     }
 }

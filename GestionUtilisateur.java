@@ -1,79 +1,68 @@
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.PrintWriter;
 import java.net.Socket;
 
 public class GestionUtilisateur implements Runnable {
     private Socket sock;
+    private String telClient;
 
     public GestionUtilisateur(Socket s) {
         sock = s;
     }
 
-    private void analyse(String demande, PrintWriter reponseServeur, ObjectOutputStream oos) {
-        String sender, code;
+    private void analyse(Paquet demande, ObjectOutputStream reponseServeur) {
         try {
-            sender = demande.split(":")[0];
-            code = demande.split(":")[1];
-            switch (code) {
-
-                case "101": // 101 : création du compte client + connexion
-                    if (Serveur.getClient(sender) != null) {
-                        reponseServeur.println("201:Client existant");
+            switch (demande.code) {
+                case "101": // Inscription + connexion
+                    String telInscription = (String) demande.contenu;
+                    if (Serveur.getClient(telInscription) != null) {
+                        reponseServeur.writeObject(new Paquet("101_REP", "201"));
                     } else {
                         Client nouveau = new Client();
-                        nouveau.setTel(sender);
+                        nouveau.setTel(telInscription);
                         Serveur.addClient(nouveau);
-                        reponseServeur.println("200:Inscription réussie");
-                        System.out.println(sender + " inscrit");
+                        reponseServeur.writeObject(new Paquet("101_REP", "200"));
+                        System.out.println(telInscription + " inscrit");
+                        telClient = telInscription;
                     }
                     break;
 
-                case "001": // 001 : connexion
-                    Client c = Serveur.getClient(sender);
+                case "001": // Connexion
+                    String telConnexion = (String) demande.contenu;
+                    Client c = Serveur.getClient(telConnexion);
                     if (c != null) {
-                        String prenom = (c.getPrenom() == null) ? "" : c.getPrenom();
-                        String nom = (c.getNom() == null) ? "" : c.getNom();
-                        reponseServeur.println("200:" + nom + ":" + prenom);
-                        System.out.println(sender + " connecté");
-                    } else {
-                        reponseServeur.println("202:Client introuvable");
-                    }
+                        reponseServeur.writeObject(new Paquet("001_REP", c));
+                        telClient = c.getTel();
+                    } else
+                        reponseServeur.writeObject(new Paquet("001_REP", null));
                     break;
 
-                case "300": // 300 : demande liste client
-
-                    oos.writeObject(Serveur.getAllClient());
-                    oos.flush();
-                    break;
-
-                case "500":
-                    System.out.println("Pour " + demande.split(":")[2] + " : " + demande.split(":")[3]);
-                    break;
-                default:
-                    System.out.println("Code inconnu : " + code + " (" + sender + ")");
+                case "300": // Liste des clients
+                    reponseServeur.writeObject(new Paquet("300_REP", Serveur.getAllClient()));
                     break;
             }
-        } catch (Exception e) {
-            System.out.println(e.getMessage());
+            reponseServeur.flush();
+            reponseServeur.reset();
+        } catch (IOException e) {
+            e.printStackTrace();
         }
     }
 
     @Override
     public void run() {
-        try (BufferedReader demandeClient = new BufferedReader(new InputStreamReader(sock.getInputStream()));
-                PrintWriter reponseServeur = new PrintWriter(sock.getOutputStream(), true);
-                ObjectOutputStream oos = new ObjectOutputStream(sock.getOutputStream());) {
-            String ligne, sender = "";
-            while ((ligne = demandeClient.readLine()) != null) {
-                sender = ligne.split(":")[0];
-                analyse(ligne, reponseServeur, oos);
+        try (ObjectOutputStream reponseServeur = new ObjectOutputStream(sock.getOutputStream());
+                ObjectInputStream requeteClient = new ObjectInputStream(sock.getInputStream())) {
+            reponseServeur.flush();
+            while (true) {
+                Paquet paquetRecu = (Paquet) requeteClient.readObject();
+                analyse(paquetRecu, reponseServeur);
             }
-            System.out.println(sender + " déconnexion");
-        } catch (IOException ioe) {
-            System.out.println("run erreur " + ioe.getMessage());
+        } catch (Exception e) {
+            System.out.println(telClient + " déconnecté");
         }
     }
 

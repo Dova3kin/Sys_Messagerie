@@ -1,3 +1,4 @@
+
 public class ClientAlreadyExistException extends Exception {
 
     public ClientAlreadyExistException() {

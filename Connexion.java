@@ -14,10 +14,12 @@ public class Connexion {
         if (c.connect()) {
             while (!identifie) {
                 System.out.println("Veuillez rentrer votre identifiant (si vous êtes nouveau, rentrez \"n\")");
+                System.out.print(">");
                 input = scanner.nextLine();
                 if (input.equals("n")) {
                     System.out.println(
                             "Bienvenue, veuillez rentrer votre numéro dé téléphone, celui-ci deviendra votre identifiant de connexions");
+                    System.out.print(">");
                     while (!identifie) {
                         input = scanner.nextLine();
                         Matcher matcher = pattern.matcher(input);
@@ -37,16 +39,20 @@ public class Connexion {
                                         identifie = true;
                                     } catch (NotFoundClientException nfce) {
                                         System.out.println("Identifiant inconnu");
+                                        System.out.print(">");
                                     }
                                 } else {
                                     System.out.println(
                                             "Veuillez donner un numéro de téléphone avec le format \"0XXXXXXXXX\"");
+                                    System.out.print(">");
                                     wait(500);
                                     System.out.println("Identifiant : ");
                                 }
                             }
                         } else {
-                            System.out.println("Veuillez donner un numéro de téléphone avec le format \"0XXXXXXXXX\"");
+                            System.out
+                                    .println("Veuillez donner un numéro de téléphone avec le format \"0XXXXXXXXX\"");
+                            System.out.print(">");
                             wait(500);
                             System.out.print("Numéro de téléphone : ");
                         }
@@ -63,7 +69,9 @@ public class Connexion {
                                 break;
                             }
                         } else {
-                            System.out.println("Veuillez donner un numéro de téléphone avec le format \"0XXXXXXXXX\"");
+                            System.out
+                                    .println("Veuillez donner un numéro de téléphone avec le format \"0XXXXXXXXX\"");
+                            System.out.print(">");
                             wait(500);
                             System.out.print("Numéro de téléphone : ");
                             input = scanner.nextLine();

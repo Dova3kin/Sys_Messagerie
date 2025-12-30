@@ -14,38 +14,37 @@ public class Chat {
     public void createChat() {
         ArrayList<Client> clientsSansChat = new ArrayList<>(); // Liste des clients avec qui le client "c" n'a jamais
                                                                // parlé
-        c.sendRequest("300");
+        c.sendPaquet("300");
         try {
-            @SuppressWarnings("unchecked")
-            ArrayList<Client> clients = (ArrayList<Client>) c.getObjectResponse().readObject();
-            for (Client c : clients) {
-                if (!this.c.getConv().contains(c.getTel()) && !c.getTel().equals(this.c.getTel())) {
-                    clientsSansChat.add(c);
-                }
+            int timeout = 0;
+            while (c.getAllClient() == null & timeout < 30) {
+                Thread.sleep(100);
+                timeout++;
             }
 
-            System.out.println("=====Liste Utilisateur=====");
-            int i = 1;
-            for (Client client : clientsSansChat) {
-                System.out.println(i++ + " : " + client);
-            }
-            System.out.println(i + " : " + "Retour");
-
-            Scanner scanner = new Scanner(System.in);
-            String input = "";
-            input = scanner.nextLine();
-            if (!input.equals(i + "")) {
-                Client recepteur = clientsSansChat.get(Integer.parseInt(input) - 1);
-                System.out.println("Chat avec " + recepteur);
-                while (!input.equals(":QUIT")) {
-                    if (c.getResponse() == null) {
-                        input = scanner.nextLine();
-                        c.sendRequest("500", recepteur, input);
-                    } else {
-                        System.out.println(recepteur.getPrenom() + " : " + c.getResponse());
+            if (c.getAllClient() != null) {
+                for (Client c : c.getAllClient()) {
+                    if (!this.c.getConv().contains(c.getTel()) && !c.getTel().equals(this.c.getTel())) {
+                        clientsSansChat.add(c);
                     }
                 }
+                System.out.println("=====Liste Utilisateur=====");
+                int i = 1;
+                for (Client client : clientsSansChat) {
+                    System.out.println(i++ + " : " + client);
+                }
+                System.out.println(":R -> Retour");
+                System.out.print(">");
+
+                Scanner scanner = new Scanner(System.in);
+                String input = "";
+                input = scanner.nextLine();
+                if (!input.equals(":R")) {
+                    Client recepteur = clientsSansChat.get(Integer.parseInt(input) - 1);
+                    System.out.println("Chat avec " + recepteur);
+                }
             }
+
         } catch (Exception e) {
             System.out.println("createChat error : " + e.getMessage());
         }
