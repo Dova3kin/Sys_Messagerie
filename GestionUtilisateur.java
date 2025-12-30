@@ -1,14 +1,14 @@
-import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStreamReader;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
-import java.io.PrintWriter;
 import java.net.Socket;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class GestionUtilisateur implements Runnable {
     private Socket sock;
     private String telClient;
+    private static Map<String, ObjectOutputStream> clientsCo = new ConcurrentHashMap<>();
 
     public GestionUtilisateur(Socket s) {
         sock = s;
@@ -26,9 +26,11 @@ public class GestionUtilisateur implements Runnable {
                         nouveau.setTel(telInscription);
                         Serveur.addClient(nouveau);
                         reponseServeur.writeObject(new Paquet("101_REP", "200"));
-                        System.out.println(telInscription + " inscrit");
+                        System.out.println(telInscription + " inscrit/connecté");
                         telClient = telInscription;
+                        clientsCo.put(nouveau.getTel(), reponseServeur);
                     }
+                    reponseServeur.reset();
                     break;
 
                 case "001": // Connexion
@@ -37,12 +39,27 @@ public class GestionUtilisateur implements Runnable {
                     if (c != null) {
                         reponseServeur.writeObject(new Paquet("001_REP", c));
                         telClient = c.getTel();
+                        clientsCo.put(c.getTel(), reponseServeur);
+                        System.out.println(telConnexion + " connecté");
                     } else
                         reponseServeur.writeObject(new Paquet("001_REP", null));
+                    reponseServeur.reset();
                     break;
 
                 case "300": // Liste des clients
                     reponseServeur.writeObject(new Paquet("300_REP", Serveur.getAllClient()));
+                    break;
+                case "500": // Envoi de message
+                    ObjectOutputStream recepteur = clientsCo.get(((String) demande.contenu).split(":")[0]);
+                    if (recepteur != null) {
+                        Paquet p = new Paquet("500_REP", ((String) demande.contenu).split(":")[1],
+                                Serveur.getClient(telClient));
+                        synchronized (recepteur) {
+                            recepteur.writeObject(p);
+                            recepteur.flush();
+                            recepteur.reset();
+                        }
+                    }
                     break;
             }
             reponseServeur.flush();
@@ -63,6 +80,7 @@ public class GestionUtilisateur implements Runnable {
             }
         } catch (Exception e) {
             System.out.println(telClient + " déconnecté");
+            clientsCo.remove(telClient);
         }
     }
 

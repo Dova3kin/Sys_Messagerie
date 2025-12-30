@@ -35,13 +35,20 @@ public class Chat {
                 }
                 System.out.println(":R -> Retour");
                 System.out.print(">");
+                c.setAllClient(null);
 
                 Scanner scanner = new Scanner(System.in);
                 String input = "";
                 input = scanner.nextLine();
                 if (!input.equals(":R")) {
-                    Client recepteur = clientsSansChat.get(Integer.parseInt(input) - 1);
+                    String recepteur = clientsSansChat.get(Integer.parseInt(input) - 1).getTel();
                     System.out.println("Chat avec " + recepteur);
+                    while (!input.equals(":R")) {
+                        System.out.print(">");
+                        input = scanner.nextLine();
+                        c.sendPaquet("500", recepteur + ":" + input);
+
+                    }
                 }
             }
 

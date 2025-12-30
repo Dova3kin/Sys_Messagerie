@@ -26,12 +26,15 @@ public class LecteurMessages implements Runnable {
                         break;
 
                     case "300_REP": // Réponse à la demande de liste
+                        @SuppressWarnings("unchecked")
                         ArrayList<Client> liste = (ArrayList<Client>) p.contenu;
                         client.setAllClient(liste); //
                         break;
 
-                    case "MSG_RECU": // Un vrai message de chat
-                        System.out.println("\n" + p.contenu);
+                    case "500_REP": // Un message de chat
+                        String sender = (p.sender.getPrenom() != null) ? p.sender.getPrenom() : p.sender.getTel();
+                        System.out.println("\r" + sender + ":" + p.contenu);
+                        System.out.print(">");
                         break;
                 }
             }

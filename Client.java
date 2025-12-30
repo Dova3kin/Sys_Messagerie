@@ -1,6 +1,5 @@
 import java.io.*;
 import java.net.Socket;
-import java.nio.file.FileAlreadyExistsException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -98,6 +97,17 @@ public class Client implements Serializable {
         }
     }
 
+    public synchronized void sendPaquet(String code) {
+        try {
+            Paquet p = new Paquet(code);
+            requeteServeur.writeObject(p);
+            requeteServeur.flush();
+            requeteServeur.reset();
+        } catch (IOException e) {
+            System.out.println("Erreur d'envoi : " + e.getMessage());
+        }
+    }
+
     public synchronized void sendPaquet(String code, Object contenu) {
         try {
             Paquet p = new Paquet(code, contenu);
@@ -109,9 +119,9 @@ public class Client implements Serializable {
         }
     }
 
-    public synchronized void sendPaquet(String code) {
+    public synchronized void sendPaquet(String code, Object contenu, Client c) {
         try {
-            Paquet p = new Paquet(code);
+            Paquet p = new Paquet(code, contenu, c);
             requeteServeur.writeObject(p);
             requeteServeur.flush();
             requeteServeur.reset();

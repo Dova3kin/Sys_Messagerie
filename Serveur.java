@@ -10,6 +10,7 @@ import java.util.ArrayList;
 class Serveur {
     private static ArrayList<Client> clients = new ArrayList<>();
 
+    @SuppressWarnings("unchecked")
     private static void loadClient() {
         File fichier = new File("SERVEUR/clients.ser");
         if (fichier.exists()) {
