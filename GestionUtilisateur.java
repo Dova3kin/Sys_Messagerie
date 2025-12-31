@@ -50,14 +50,14 @@ public class GestionUtilisateur implements Runnable {
                     reponseServeur.writeObject(new Paquet("300_REP", Serveur.getAllClient()));
                     break;
                 case "500": // Envoi de message
-                    ObjectOutputStream recepteur = clientsCo.get(((String) demande.contenu).split(":")[0]);
-                    if (recepteur != null) {
-                        Paquet p = new Paquet("500_REP", ((String) demande.contenu).split(":")[1],
-                                Serveur.getClient(telClient));
-                        synchronized (recepteur) {
-                            recepteur.writeObject(p);
-                            recepteur.flush();
-                            recepteur.reset();
+                    Message msg = (Message) demande.contenu;
+                    ObjectOutputStream destinaire = clientsCo.get(msg.getDestinataire());
+                    if (destinaire != null) {
+                        Paquet p = new Paquet("500_REP", msg);
+                        synchronized (destinaire) {
+                            destinaire.writeObject(p);
+                            destinaire.flush();
+                            destinaire.reset();
                         }
                     }
                     break;

@@ -2,10 +2,12 @@ import java.util.ArrayList;
 import java.util.Scanner;
 
 public class Chat {
-    Client c;
+    private Client c;
+    private String id;
 
     public Chat(Client c) {
         this.c = c;
+        id = (c.getPrenom() != "") ? c.getPrenom() : c.getTel();
     }
 
     public void openChat() {
@@ -41,12 +43,12 @@ public class Chat {
                 String input = "";
                 input = scanner.nextLine();
                 if (!input.equals(":R")) {
-                    String recepteur = clientsSansChat.get(Integer.parseInt(input) - 1).getTel();
-                    System.out.println("Chat avec " + recepteur);
+                    String destinataire = clientsSansChat.get(Integer.parseInt(input) - 1).getTel();
+                    System.out.println("Chat avec " + destinataire);
                     while (!input.equals(":R")) {
                         System.out.print(">");
                         input = scanner.nextLine();
-                        c.sendPaquet("500", recepteur + ":" + input);
+                        c.sendPaquet("500", new Message(destinataire, id, input));
 
                     }
                 }

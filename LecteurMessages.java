@@ -32,8 +32,8 @@ public class LecteurMessages implements Runnable {
                         break;
 
                     case "500_REP": // Un message de chat
-                        String sender = (p.sender.getPrenom() != null) ? p.sender.getPrenom() : p.sender.getTel();
-                        System.out.println("\r" + sender + ":" + p.contenu);
+                        Message msg = (Message) p.contenu;
+                        System.out.println("\r" + msg.getEnvoyeur() + ":" + msg.getMessage());
                         System.out.print(">");
                         break;
                 }

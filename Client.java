@@ -119,17 +119,6 @@ public class Client implements Serializable {
         }
     }
 
-    public synchronized void sendPaquet(String code, Object contenu, Client c) {
-        try {
-            Paquet p = new Paquet(code, contenu, c);
-            requeteServeur.writeObject(p);
-            requeteServeur.flush();
-            requeteServeur.reset();
-        } catch (IOException e) {
-            System.out.println("Erreur d'envoi : " + e.getMessage());
-        }
-    }
-
     public String getTel() {
         return tel;
     }
