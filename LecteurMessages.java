@@ -22,6 +22,7 @@ public class LecteurMessages implements Runnable {
                             client.setTel(infos.getTel());
                             client.setPrenom(infos.getPrenom());
                             client.setNom(infos.getNom());
+                            client.setConv(infos.getConv());
                         }
                         break;
 
@@ -33,8 +34,15 @@ public class LecteurMessages implements Runnable {
 
                     case "500_REP": // Un message de chat
                         Message msg = (Message) p.contenu;
-                        System.out.println("\r" + msg.getEnvoyeur() + ":" + msg.getMessage());
-                        System.out.print(">");
+                        client.addConv(msg.getEnvoyeur());
+                        client.getConv().get(msg.getEnvoyeur()).add(msg);
+                        if (Chat.active) {
+                            System.out.println(
+                                    "\r" + Couleur.BLEU + msg.getEnvoyeur() + Couleur.RESET + ":" +
+                                            msg.getMessage());
+                            System.out.print(">");
+
+                        }
                         break;
                 }
             }

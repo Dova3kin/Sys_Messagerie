@@ -4,12 +4,16 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Map;
 import java.util.Scanner;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class Client implements Serializable {
     private static final long serialVersionUID = 1L;
     private String tel, nom, prenom, dossierPerso;
-    private ArrayList<String> conversations = new ArrayList<>(); // Numéro de téléphone avec qui le client à déjà parlé
+    // private ArrayList<String> conversations = new ArrayList<>(); // Numéro de
+    // téléphone avec qui le client à déjà parlé
+    private Map<String, ArrayList<Message>> conversations = new ConcurrentHashMap<>();
     private transient ArrayList<Client> allClient = null;
     private transient String codeInscriptionRecu = null;
     private transient Socket soc = null;
@@ -144,8 +148,16 @@ public class Client implements Serializable {
         this.nom = nom;
     }
 
-    public ArrayList<String> getConv() {
+    public void addConv(String tel) {
+        conversations.putIfAbsent(tel, new ArrayList<>());
+    }
+
+    public Map<String, ArrayList<Message>> getConv() {
         return conversations;
+    }
+
+    public void setConv(Map<String, ArrayList<Message>> conversations) {
+        this.conversations = conversations;
     }
 
     public void setAllClient(ArrayList<Client> liste) {
@@ -166,6 +178,10 @@ public class Client implements Serializable {
 
     public Socket getSocket() {
         return soc;
+    }
+
+    public void push() {
+        sendPaquet("102", this);
     }
 
     public void message() {

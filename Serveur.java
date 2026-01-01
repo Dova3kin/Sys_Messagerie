@@ -54,6 +54,16 @@ class Serveur {
         return clients;
     }
 
+    public static void updateClient(String tel, Client clientAJour) {
+        for (int i = 0; i < clients.size(); i++) {
+            if (clients.get(i).getTel().equals(tel)) {
+                clients.set(i, clientAJour);
+                saveAll();
+                break;
+            }
+        }
+    }
+
     public static void main(String args[]) {
         loadClient();
         Socket sock = null;

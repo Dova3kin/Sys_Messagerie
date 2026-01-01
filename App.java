@@ -13,6 +13,14 @@ public class App {
 
     public static void main(String[] args) {
         Client c = new Client();
+        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+            c.push();
+            try {
+                c.getSocket().close();
+            } catch (IOException ioe) {
+                System.out.println(ioe.getMessage());
+            }
+        }));
         new Connexion(c);
         System.out.println("Bienvenue " + (c.getPrenom() != null ? c.getPrenom() : ""));
         wait(500);
@@ -35,11 +43,6 @@ public class App {
                 case "3":
                     break;
                 case "4":
-                    try {
-                        c.getSocket().close();
-                    } catch (IOException ioe) {
-                        System.out.println(ioe.getMessage());
-                    }
                     break;
                 default:
                     break;

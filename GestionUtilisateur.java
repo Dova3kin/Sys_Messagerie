@@ -46,6 +46,11 @@ public class GestionUtilisateur implements Runnable {
                     reponseServeur.reset();
                     break;
 
+                case "102": // Mise a jour des données client côté serveurs
+                    Client clientAJour = (Client) demande.contenu;
+                    Serveur.updateClient(telClient, clientAJour);
+                    System.out.println(telClient + " mis à jour");
+                    break;
                 case "300": // Liste des clients
                     reponseServeur.writeObject(new Paquet("300_REP", Serveur.getAllClient()));
                     break;
