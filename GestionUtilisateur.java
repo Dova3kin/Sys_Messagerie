@@ -8,10 +8,24 @@ import java.util.concurrent.ConcurrentHashMap;
 public class GestionUtilisateur implements Runnable {
     private Socket sock;
     private String telClient;
+    private ObjectOutputStream reponseServeur;
     private static Map<String, ObjectOutputStream> clientsCo = new ConcurrentHashMap<>();
 
     public GestionUtilisateur(Socket s) {
         sock = s;
+        Serveur.ajouterObservateur(this);
+    }
+
+    public void recevoirNotification(String message) {
+        try {
+            if (reponseServeur != null) {
+                reponseServeur.writeObject(new Paquet("102_NOTIF", message));
+                reponseServeur.flush();
+                reponseServeur.reset();
+            }
+        } catch (IOException e) {
+            System.err.println("Erreur envoi notification à " + telClient);
+        }
     }
 
     private void analyse(Paquet demande, ObjectOutputStream reponseServeur) {
@@ -29,6 +43,7 @@ public class GestionUtilisateur implements Runnable {
                         System.out.println(telInscription + " inscrit/connecté");
                         telClient = telInscription;
                         clientsCo.put(nouveau.getTel(), reponseServeur);
+                        Serveur.diffuserNotificationGlobale(telInscription + " vient de s'inscrire !", telInscription);
                     }
                     reponseServeur.reset();
                     break;
@@ -41,6 +56,14 @@ public class GestionUtilisateur implements Runnable {
                         telClient = c.getTel();
                         clientsCo.put(c.getTel(), reponseServeur);
                         System.out.println(telConnexion + " connecté");
+
+                        if (!c.getNotifs().isEmpty()) {
+                            for (String notif : c.getNotifs()) {
+                                reponseServeur.writeObject(new Paquet("102_NOTIF", notif));
+                            }
+                            c.viderNotifs();
+                            Serveur.saveAll();
+                        }
                     } else
                         reponseServeur.writeObject(new Paquet("001_REP", null));
                     reponseServeur.reset();
@@ -74,11 +97,20 @@ public class GestionUtilisateur implements Runnable {
         }
     }
 
+    public static Map<String, ObjectOutputStream> getClientsCo() {
+        return clientsCo;
+    }
+
+    public String getTelClient() {
+        return telClient;
+    }
+
     @Override
     public void run() {
         try (ObjectOutputStream reponseServeur = new ObjectOutputStream(sock.getOutputStream());
                 ObjectInputStream requeteClient = new ObjectInputStream(sock.getInputStream())) {
             reponseServeur.flush();
+            this.reponseServeur = reponseServeur;
             while (true) {
                 Paquet paquetRecu = (Paquet) requeteClient.readObject();
                 analyse(paquetRecu, reponseServeur);
@@ -86,6 +118,7 @@ public class GestionUtilisateur implements Runnable {
         } catch (Exception e) {
             System.out.println(telClient + " déconnecté");
             clientsCo.remove(telClient);
+            Serveur.supprimerObservateur(this);
         }
     }
 

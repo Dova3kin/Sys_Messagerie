@@ -13,6 +13,7 @@ public class App {
 
     public static void main(String[] args) {
         Client c = new Client();
+        Scanner scanner = new Scanner(System.in);
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
             c.push();
             try {
@@ -20,16 +21,16 @@ public class App {
             } catch (IOException ioe) {
                 System.out.println(ioe.getMessage());
             }
+            scanner.close();
         }));
         new Connexion(c);
         System.out.println("Bienvenue " + (c.getPrenom() != null ? c.getPrenom() : ""));
         wait(500);
-        Scanner scanner = new Scanner(System.in);
         String input = "";
         while (!input.equals("4")) {
             System.out.println("==========ACCUEIL==========");
             System.out.println("1 : Messages");
-            System.out.println("2 : Notifications");
+            System.out.println("2 : Notifications " + c.getNotifs().size());
             System.out.println("3 : Options");
             System.out.println("4 : Déconnexion");
             System.out.print(">");
@@ -39,6 +40,7 @@ public class App {
                     c.message();
                     break;
                 case "2":
+                    c.openNotifs();
                     break;
                 case "3":
                     break;

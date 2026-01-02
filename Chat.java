@@ -42,6 +42,7 @@ public class Chat {
                     input = scanner.nextLine();
                     if (!input.equals(":R")) {
                         String destinataire = discussion.get(Integer.parseInt(input) - 1);
+                        System.out.println("Chat avec " + destinataire + "\n---------------------------\n\n");
                         chargerChat(destinataire);
                         while (!input.equals(":R")) {
                             System.out.print(">");
@@ -98,8 +99,8 @@ public class Chat {
                     input = scanner.nextLine();
                     if (!input.equals(":R")) {
                         String destinataire = clientsSansChat.get(Integer.parseInt(input) - 1).getTel();
-                        c.addConv(destinataire);
                         System.out.println("Chat avec " + destinataire + "\n---------------------------\n\n");
+                        c.addConv(destinataire);
                         while (!input.equals(":R")) {
                             System.out.print(">");
                             input = scanner.nextLine();

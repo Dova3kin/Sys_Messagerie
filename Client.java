@@ -14,6 +14,7 @@ public class Client implements Serializable {
     // private ArrayList<String> conversations = new ArrayList<>(); // Numéro de
     // téléphone avec qui le client à déjà parlé
     private Map<String, ArrayList<Message>> conversations = new ConcurrentHashMap<>();
+    private ArrayList<String> notificationsEnAttente = new ArrayList<>();
     private transient ArrayList<Client> allClient = null;
     private transient String codeInscriptionRecu = null;
     private transient Socket soc = null;
@@ -176,6 +177,18 @@ public class Client implements Serializable {
         return reponseServeur;
     }
 
+    public void ajouterNotif(String msg) {
+        notificationsEnAttente.add(msg);
+    }
+
+    public ArrayList<String> getNotifs() {
+        return notificationsEnAttente;
+    }
+
+    public void viderNotifs() {
+        notificationsEnAttente.clear();
+    }
+
     public Socket getSocket() {
         return soc;
     }
@@ -208,6 +221,13 @@ public class Client implements Serializable {
                     break;
             }
         }
+    }
+
+    public void openNotifs() {
+        for (String notif : notificationsEnAttente) {
+            System.out.println("-" + notif);
+        }
+        viderNotifs();
     }
 
     @Override

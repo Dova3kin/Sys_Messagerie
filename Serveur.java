@@ -6,9 +6,12 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.*;
 import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 class Serveur {
     private static ArrayList<Client> clients = new ArrayList<>();
+    private static List<GestionUtilisateur> observateurs = new CopyOnWriteArrayList<>();
 
     @SuppressWarnings("unchecked")
     private static void loadClient() {
@@ -62,6 +65,32 @@ class Serveur {
                 break;
             }
         }
+    }
+
+    public static void ajouterObservateur(GestionUtilisateur obs) {
+        observateurs.add(obs);
+    }
+
+    public static void supprimerObservateur(GestionUtilisateur obs) {
+        observateurs.remove(obs);
+    }
+
+    public static synchronized void diffuserNotificationGlobale(String message, String telExpediteur) {
+        for (Client c : clients) {
+            if (c.getTel().equals(telExpediteur))
+                continue;
+            if (GestionUtilisateur.getClientsCo().containsKey(c.getTel())) {
+                for (GestionUtilisateur gu : observateurs) {
+                    if (gu.getTelClient().equals(c.getTel())) {
+                        gu.recevoirNotification(message);
+                        break;
+                    }
+                }
+            } else {
+                c.ajouterNotif(message);
+            }
+        }
+        saveAll();
     }
 
     public static void main(String args[]) {

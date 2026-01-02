@@ -26,6 +26,10 @@ public class LecteurMessages implements Runnable {
                         }
                         break;
 
+                    case "102_NOTIF":
+
+                        break;
+
                     case "300_REP": // Réponse à la demande de liste
                         @SuppressWarnings("unchecked")
                         ArrayList<Client> liste = (ArrayList<Client>) p.contenu;
