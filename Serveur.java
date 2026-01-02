@@ -87,7 +87,7 @@ class Serveur {
                     }
                 }
             } else {
-                c.ajouterNotif(message);
+                c.addNotif(message);
             }
         }
         saveAll();

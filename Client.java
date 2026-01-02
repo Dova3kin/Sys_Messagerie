@@ -177,7 +177,7 @@ public class Client implements Serializable {
         return reponseServeur;
     }
 
-    public void ajouterNotif(String msg) {
+    public void addNotif(String msg) {
         notificationsEnAttente.add(msg);
     }
 

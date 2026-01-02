@@ -27,7 +27,10 @@ public class LecteurMessages implements Runnable {
                         break;
 
                     case "102_NOTIF":
-
+                        client.addNotif((String) p.contenu);
+                        System.out.println(
+                                "\r" + Couleur.ROUGE + "nouvelle notif " + Couleur.RESET);
+                        System.out.print(">");
                         break;
 
                     case "300_REP": // Réponse à la demande de liste
