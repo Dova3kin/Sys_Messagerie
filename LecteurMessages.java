@@ -23,6 +23,7 @@ public class LecteurMessages implements Runnable {
                             client.setPrenom(infos.getPrenom());
                             client.setNom(infos.getNom());
                             client.setConv(infos.getConv());
+                            client.setNotif(infos.getNotifs());
                         }
                         break;
 
@@ -38,6 +39,10 @@ public class LecteurMessages implements Runnable {
                         ArrayList<Client> liste = (ArrayList<Client>) p.contenu;
                         client.setAllClient(liste); //
                         break;
+
+                    case "404":
+                        System.out.println(p.contenu);
+                        System.exit(0);
 
                     case "500_REP": // Un message de chat
                         Message msg = (Message) p.contenu;

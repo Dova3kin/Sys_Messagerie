@@ -26,29 +26,6 @@ public class App {
         new Connexion(c);
         System.out.println("Bienvenue " + (c.getPrenom() != null ? c.getPrenom() : ""));
         wait(500);
-        String input = "";
-        while (!input.equals("4")) {
-            System.out.println("==========ACCUEIL==========");
-            System.out.println("1 : Messages");
-            System.out.println("2 : Notifications " + c.getNotifs().size());
-            System.out.println("3 : Options");
-            System.out.println("4 : Déconnexion");
-            System.out.print(">");
-            input = scanner.nextLine();
-            switch (input) {
-                case "1":
-                    c.message();
-                    break;
-                case "2":
-                    c.openNotifs();
-                    break;
-                case "3":
-                    break;
-                case "4":
-                    break;
-                default:
-                    break;
-            }
-        }
+        c.openAccueil(scanner);
     }
 }

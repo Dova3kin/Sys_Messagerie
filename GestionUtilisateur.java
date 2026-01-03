@@ -18,10 +18,12 @@ public class GestionUtilisateur implements Runnable {
 
     public void recevoirNotification(String message) {
         try {
-            if (reponseServeur != null) {
-                reponseServeur.writeObject(new Paquet("102_NOTIF", message));
-                reponseServeur.flush();
-                reponseServeur.reset();
+            synchronized (reponseServeur) {
+                if (reponseServeur != null) {
+                    reponseServeur.writeObject(new Paquet("102_NOTIF", message));
+                    reponseServeur.flush();
+                    reponseServeur.reset();
+                }
             }
         } catch (IOException e) {
             System.err.println("Erreur envoi notification à " + telClient);
@@ -52,17 +54,14 @@ public class GestionUtilisateur implements Runnable {
                     String telConnexion = (String) demande.contenu;
                     Client c = Serveur.getClient(telConnexion);
                     if (c != null) {
-                        reponseServeur.writeObject(new Paquet("001_REP", c));
-                        telClient = c.getTel();
-                        clientsCo.put(c.getTel(), reponseServeur);
-                        System.out.println(telConnexion + " connecté");
-
-                        if (!c.getNotifs().isEmpty()) {
-                            for (String notif : c.getNotifs()) {
-                                reponseServeur.writeObject(new Paquet("102_NOTIF", notif));
-                            }
-                            c.viderNotifs();
-                            Serveur.saveAll();
+                        if (clientsCo.get(telConnexion) != null) {
+                            Paquet p = new Paquet("404", "Connexion déjà existante");
+                            reponseServeur.writeObject(p);
+                        } else {
+                            reponseServeur.writeObject(new Paquet("001_REP", c));
+                            telClient = c.getTel();
+                            clientsCo.put(c.getTel(), reponseServeur);
+                            System.out.println(telConnexion + " connecté");
                         }
                     } else
                         reponseServeur.writeObject(new Paquet("001_REP", null));
@@ -74,18 +73,36 @@ public class GestionUtilisateur implements Runnable {
                     Serveur.updateClient(telClient, clientAJour);
                     System.out.println(telClient + " mis à jour");
                     break;
+
                 case "300": // Liste des clients
                     reponseServeur.writeObject(new Paquet("300_REP", Serveur.getAllClient()));
                     break;
+
+                case "301": // Notif de lecture des messages
+                    ObjectOutputStream receveur = clientsCo.get(demande.contenu);
+                    if (receveur != null) { // s'il est connecté
+                        Paquet p = new Paquet("102_NOTIF", telClient + " à vu les messages");
+                        synchronized (receveur) {
+                            receveur.writeObject(p);
+                            receveur.flush();
+                            receveur.reset();
+                        }
+                    } else {
+                        Client client = Serveur.getClient((String) demande.contenu);
+                        client.addNotif(telClient + " à vu les messages");
+                        Serveur.saveAll();
+                    }
+                    break;
+
                 case "500": // Envoi de message
                     Message msg = (Message) demande.contenu;
-                    ObjectOutputStream destinaire = clientsCo.get(msg.getDestinataire());
-                    if (destinaire != null) {
+                    ObjectOutputStream destinataire = clientsCo.get(msg.getDestinataire());
+                    if (destinataire != null) {
                         Paquet p = new Paquet("500_REP", msg);
-                        synchronized (destinaire) {
-                            destinaire.writeObject(p);
-                            destinaire.flush();
-                            destinaire.reset();
+                        synchronized (destinataire) {
+                            destinataire.writeObject(p);
+                            destinataire.flush();
+                            destinataire.reset();
                         }
                     }
                     break;

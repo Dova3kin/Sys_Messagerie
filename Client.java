@@ -11,8 +11,6 @@ import java.util.concurrent.ConcurrentHashMap;
 public class Client implements Serializable {
     private static final long serialVersionUID = 1L;
     private String tel, nom, prenom, dossierPerso;
-    // private ArrayList<String> conversations = new ArrayList<>(); // Numéro de
-    // téléphone avec qui le client à déjà parlé
     private Map<String, ArrayList<Message>> conversations = new ConcurrentHashMap<>();
     private ArrayList<String> notificationsEnAttente = new ArrayList<>();
     private transient ArrayList<Client> allClient = null;
@@ -185,6 +183,10 @@ public class Client implements Serializable {
         return notificationsEnAttente;
     }
 
+    public void setNotif(ArrayList<String> notificationsEnAttente) {
+        this.notificationsEnAttente = notificationsEnAttente;
+    }
+
     public void viderNotifs() {
         notificationsEnAttente.clear();
     }
@@ -195,6 +197,33 @@ public class Client implements Serializable {
 
     public void push() {
         sendPaquet("102", this);
+    }
+
+    public void openAccueil(Scanner scanner) {
+        String input = "";
+        while (!input.equals("4")) {
+            System.out.println("==========ACCUEIL==========");
+            System.out.println("1 : Messages");
+            System.out.println("2 : Notifications " + getNotifs().size());
+            System.out.println("3 : Options");
+            System.out.println("4 : Déconnexion");
+            System.out.print(">");
+            input = scanner.nextLine();
+            switch (input) {
+                case "1":
+                    message();
+                    break;
+                case "2":
+                    openNotifs();
+                    break;
+                case "3":
+                    break;
+                case "4":
+                    break;
+                default:
+                    break;
+            }
+        }
     }
 
     public void message() {
@@ -224,9 +253,14 @@ public class Client implements Serializable {
     }
 
     public void openNotifs() {
-        for (String notif : notificationsEnAttente) {
-            System.out.println("-" + notif);
-        }
+        System.out.println("========Notification=======");
+        if (notificationsEnAttente.size() > 0) {
+            for (String notif : notificationsEnAttente) {
+                System.out.println("- " + notif);
+            }
+        } else
+            System.out.println("Aucune notification");
+        System.out.println("\n\n");
         viderNotifs();
     }
 

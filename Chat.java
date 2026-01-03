@@ -42,6 +42,7 @@ public class Chat {
                     input = scanner.nextLine();
                     if (!input.equals(":R")) {
                         String destinataire = discussion.get(Integer.parseInt(input) - 1);
+                        c.sendPaquet("301", destinataire);
                         System.out.println("Chat avec " + destinataire + "\n---------------------------\n\n");
                         chargerChat(destinataire);
                         while (!input.equals(":R")) {
