@@ -29,7 +29,6 @@ public class Client implements Serializable {
         this.codeInscriptionRecu = null;
 
         try {
-            // On envoie un Paquet avec le code 101 et le numéro de téléphone
             sendPaquet("101", tel);
 
             // Boucle d'attente

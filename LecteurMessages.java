@@ -46,7 +46,7 @@ public class LecteurMessages implements Runnable {
                         client.setAllClient(liste); //
                         break;
 
-                    case "404":
+                    case "404": // Erreur
                         System.out.println(p.contenu);
                         System.exit(0);
 
@@ -54,7 +54,7 @@ public class LecteurMessages implements Runnable {
                         Message<String> msg = (Message<String>) p.contenu;
                         client.addConv(msg.getEnvoyeur());
                         client.addMessage(msg.getEnvoyeur(), msg);
-                        if (Chat.active) {
+                        if (Chat.active.equals(msg.getEnvoyeur())) {
                             System.out.println(
                                     "\r" + Couleur.BLEU + msg.getId() + Couleur.RESET + ":" +
                                             msg.getMessage());
@@ -69,7 +69,9 @@ public class LecteurMessages implements Runnable {
                         break;
                 }
             }
-        } catch (Exception e) {
+        } catch (
+
+        Exception e) {
             /* ... */ }
     }
 }

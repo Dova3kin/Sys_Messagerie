@@ -6,7 +6,7 @@ import java.util.Scanner;
 
 public class Chat {
     private Client c;
-    public static Boolean active = false;
+    public static String active = "";
 
     public Chat(Client c) {
         this.c = c;
@@ -41,48 +41,30 @@ public class Chat {
 
                     input = scanner.nextLine();
                     if (!input.equals(":R")) {
-                        active = true;
                         String destinataire = discussion.get(Integer.parseInt(input) - 1);
+                        active = destinataire;
                         c.sendPaquet("301", destinataire);
                         System.out.println("Chat avec " + destinataire + "\n---------------------------\n\n");
                         chargerChat(destinataire);
-                        while (!input.equals(":R")) {
-                            System.out.print(">");
-                            input = scanner.nextLine();
-
-                            if (input.startsWith("fichier/")) {
-                                byte[] fichier = Files
-                                        .readAllBytes(Paths.get("CLIENT/" + c.getTel() + "/" + input.substring(8)));
-                                Message<byte[]> msgFichier = new Message<>(destinataire, c.getTel(), c.getPrenom(),
-                                        fichier);
-                                c.sendPaquet("501", msgFichier);
-                                Message<String> msg = new Message<>(destinataire, c.getTel(), c.getPrenom(),
-                                        "fichier reçu");
-                                c.sendPaquet("500", msg);
-                                c.addMessage(destinataire, msg);
-
-                            } else if (!input.equals(":R")) {
-                                Message<String> msg = new Message<>(destinataire, c.getTel(), c.getPrenom(), input);
-                                c.sendPaquet("500", msg);
-                                c.addMessage(destinataire, msg);
-                            }
-                        }
+                        gestionMessage(input, destinataire, scanner);
                         input = "";
                     }
                 }
                 c.setAllClient(null);
             }
-        } catch (Exception e) {
+        } catch (
+
+        Exception e) {
             System.out.println("Open Chat error : ");
             e.printStackTrace();
         } finally {
-            active = false;
+            active = "";
+            ;
         }
 
     }
 
     public void createChat() {
-        active = true;
         ArrayList<Client> clientsSansChat = new ArrayList<>(); // Liste des clients avec qui le client "c" n'a jamais
                                                                // parlé
         c.sendPaquet("300");
@@ -113,38 +95,21 @@ public class Chat {
                     input = scanner.nextLine();
                     if (!input.equals(":R")) {
                         String destinataire = clientsSansChat.get(Integer.parseInt(input) - 1).getTel();
+                        active = destinataire;
+
                         System.out.println("Chat avec " + destinataire + "\n---------------------------\n\n");
                         c.addConv(destinataire);
-                        while (!input.equals(":R")) {
-                            System.out.print(">");
-                            input = scanner.nextLine();
-
-                            if (input.startsWith("fichier/")) {
-                                byte[] fichier = Files
-                                        .readAllBytes(Paths.get("CLIENT/" + c.getTel() + "/" + input.substring(8)));
-                                Message<byte[]> msgFichier = new Message<>(destinataire, c.getTel(), c.getPrenom(),
-                                        fichier);
-                                c.sendPaquet("501", msgFichier);
-                                Message<String> msg = new Message<>(destinataire, c.getTel(), c.getPrenom(),
-                                        "fichier reçu");
-                                c.sendPaquet("500", msg);
-                                c.addMessage(destinataire, msg);
-
-                            } else if (!input.equals(":R")) {
-                                Message<String> msg = new Message<>(destinataire, c.getTel(), c.getPrenom(), input);
-                                c.sendPaquet("500", msg);
-                                c.addMessage(destinataire, msg);
-                            }
-                        }
+                        gestionMessage(input, destinataire, scanner);
                         input = "";
                     }
                 }
-                c.setAllClient(null);
             }
+            c.setAllClient(null);
         } catch (Exception e) {
             System.out.println("createChat error : " + e.getMessage());
         } finally {
-            active = false;
+            active = "";
+
         }
     }
 
@@ -170,4 +135,27 @@ public class Chat {
         }
     }
 
+    public void gestionMessage(String input, String destinataire, Scanner scanner) throws IOException {
+        while (!input.equals(":R")) {
+            System.out.print(">");
+            input = scanner.nextLine();
+
+            if (input.startsWith("fichier/")) {
+                byte[] fichier = Files
+                        .readAllBytes(Paths.get("CLIENT/" + c.getTel() + "/" + input.substring(8)));
+                Message<byte[]> msgFichier = new Message<>(destinataire, c.getTel(), c.getPrenom(),
+                        fichier);
+                c.sendPaquet("501", msgFichier);
+                Message<String> msg = new Message<>(destinataire, c.getTel(), c.getPrenom(),
+                        "fichier reçu");
+                c.sendPaquet("500", msg);
+                c.addMessage(destinataire, msg);
+
+            } else if (!input.equals(":R")) {
+                Message<String> msg = new Message<>(destinataire, c.getTel(), c.getPrenom(), input);
+                c.sendPaquet("500", msg);
+                c.addMessage(destinataire, msg);
+            }
+        }
+    }
 }
