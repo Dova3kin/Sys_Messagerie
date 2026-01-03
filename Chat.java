@@ -1,18 +1,18 @@
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Scanner;
 
 public class Chat {
     private Client c;
-    private String id;
     public static Boolean active = false;
 
     public Chat(Client c) {
         this.c = c;
-        id = (c.getPrenom() != "") ? c.getPrenom() : c.getTel();
     }
 
     public void openChat() {
-        active = true;
         c.sendPaquet("300");
         try {
             int timeout = 0;
@@ -41,6 +41,7 @@ public class Chat {
 
                     input = scanner.nextLine();
                     if (!input.equals(":R")) {
+                        active = true;
                         String destinataire = discussion.get(Integer.parseInt(input) - 1);
                         c.sendPaquet("301", destinataire);
                         System.out.println("Chat avec " + destinataire + "\n---------------------------\n\n");
@@ -48,10 +49,22 @@ public class Chat {
                         while (!input.equals(":R")) {
                             System.out.print(">");
                             input = scanner.nextLine();
-                            if (!input.equals(":R")) {
-                                Message msg = new Message(destinataire, id, input);
+
+                            if (input.startsWith("fichier/")) {
+                                byte[] fichier = Files
+                                        .readAllBytes(Paths.get("CLIENT/" + c.getTel() + "/" + input.substring(8)));
+                                Message<byte[]> msgFichier = new Message<>(destinataire, c.getTel(), c.getPrenom(),
+                                        fichier);
+                                c.sendPaquet("501", msgFichier);
+                                Message<String> msg = new Message<>(destinataire, c.getTel(), c.getPrenom(),
+                                        "fichier reçu");
                                 c.sendPaquet("500", msg);
-                                c.getConv().get(destinataire).add(msg);
+                                c.addMessage(destinataire, msg);
+
+                            } else if (!input.equals(":R")) {
+                                Message<String> msg = new Message<>(destinataire, c.getTel(), c.getPrenom(), input);
+                                c.sendPaquet("500", msg);
+                                c.addMessage(destinataire, msg);
                             }
                         }
                         input = "";
@@ -105,10 +118,22 @@ public class Chat {
                         while (!input.equals(":R")) {
                             System.out.print(">");
                             input = scanner.nextLine();
-                            if (!input.equals(":R")) {
-                                Message msg = new Message(destinataire, id, input);
+
+                            if (input.startsWith("fichier/")) {
+                                byte[] fichier = Files
+                                        .readAllBytes(Paths.get("CLIENT/" + c.getTel() + "/" + input.substring(8)));
+                                Message<byte[]> msgFichier = new Message<>(destinataire, c.getTel(), c.getPrenom(),
+                                        fichier);
+                                c.sendPaquet("501", msgFichier);
+                                Message<String> msg = new Message<>(destinataire, c.getTel(), c.getPrenom(),
+                                        "fichier reçu");
                                 c.sendPaquet("500", msg);
-                                c.getConv().get(destinataire).add(msg);
+                                c.addMessage(destinataire, msg);
+
+                            } else if (!input.equals(":R")) {
+                                Message<String> msg = new Message<>(destinataire, c.getTel(), c.getPrenom(), input);
+                                c.sendPaquet("500", msg);
+                                c.addMessage(destinataire, msg);
                             }
                         }
                         input = "";
@@ -124,12 +149,24 @@ public class Chat {
     }
 
     public void chargerChat(String destinataire) {
-        ArrayList<Message> chat = c.getConv().get(destinataire);
-        for (Message msg : chat) {
-            if (msg.getEnvoyeur().equals(destinataire))
-                System.out.println(Couleur.BLEU + msg.getEnvoyeur() + Couleur.RESET + ": " + msg.getMessage());
-            else
-                System.out.println(">" + msg.getMessage());
+        ArrayList<Message<?>> chat = c.getConv().get(destinataire);
+        for (Message<?> msg : chat) {
+            if (msg.getMessage() instanceof String) {
+                if (msg.getEnvoyeur().equals(destinataire))
+                    System.out.println(Couleur.BLEU + msg.getId() + Couleur.RESET + ": " + msg.getMessage());
+                else {
+                    if (msg.getMessage().equals("Fichier reçu"))
+                        System.out.println(">Fichier envoyé");
+                    else
+                        System.out.println(">" + msg.getMessage());
+                }
+            } else {
+                try {
+                    Files.write(Paths.get("CLIENT/" + c.getTel() + "image_recu.jpg"), (byte[]) msg.getMessage());
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
         }
     }
 

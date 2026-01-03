@@ -95,15 +95,44 @@ public class GestionUtilisateur implements Runnable {
                     break;
 
                 case "500": // Envoi de message
-                    Message msg = (Message) demande.contenu;
+                    Message<String> msg = (Message<String>) demande.contenu;
                     ObjectOutputStream destinataire = clientsCo.get(msg.getDestinataire());
-                    if (destinataire != null) {
+                    if (destinataire != null) { // si le destinataire est connecté
                         Paquet p = new Paquet("500_REP", msg);
                         synchronized (destinataire) {
                             destinataire.writeObject(p);
+                            destinataire
+                                    .writeObject(
+                                            new Paquet("102_NOTIF_SANS_NOTIF", "Nouveaux messages de " + telClient));
                             destinataire.flush();
                             destinataire.reset();
                         }
+                    } else {
+                        Client client = Serveur.getClient(msg.getDestinataire());
+                        client.addMessage(telClient, msg);
+                        client.addNotif("Nouveaux messages de " + telClient);
+                        Serveur.saveAll();
+                    }
+                    break;
+
+                case "501":
+                    Message<byte[]> msgFichier = (Message<byte[]>) demande.contenu;
+                    destinataire = clientsCo.get(msgFichier.getDestinataire());
+                    if (destinataire != null) { // si le destinataire est connecté
+                        Paquet p = new Paquet("501_REP", msgFichier);
+                        synchronized (destinataire) {
+                            destinataire.writeObject(p);
+                            destinataire
+                                    .writeObject(
+                                            new Paquet("102_NOTIF_SANS_NOTIF", "Nouveaux messages de " + telClient));
+                            destinataire.flush();
+                            destinataire.reset();
+                        }
+                    } else {
+                        Client client = Serveur.getClient(msgFichier.getDestinataire());
+                        client.addMessage(telClient, msgFichier);
+                        client.addNotif("Nouveaux messages de " + telClient);
+                        Serveur.saveAll();
                     }
                     break;
             }

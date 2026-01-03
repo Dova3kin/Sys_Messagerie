@@ -11,7 +11,7 @@ import java.util.concurrent.ConcurrentHashMap;
 public class Client implements Serializable {
     private static final long serialVersionUID = 1L;
     private String tel, nom, prenom, dossierPerso;
-    private Map<String, ArrayList<Message>> conversations = new ConcurrentHashMap<>();
+    private Map<String, ArrayList<Message<?>>> conversations = new ConcurrentHashMap<>();
     private ArrayList<String> notificationsEnAttente = new ArrayList<>();
     private transient ArrayList<Client> allClient = null;
     private transient String codeInscriptionRecu = null;
@@ -151,12 +151,16 @@ public class Client implements Serializable {
         conversations.putIfAbsent(tel, new ArrayList<>());
     }
 
-    public Map<String, ArrayList<Message>> getConv() {
+    public Map<String, ArrayList<Message<?>>> getConv() {
         return conversations;
     }
 
-    public void setConv(Map<String, ArrayList<Message>> conversations) {
+    public void setConv(Map<String, ArrayList<Message<?>>> conversations) {
         this.conversations = conversations;
+    }
+
+    public void addMessage(String envoyeur, Message<?> msg) {
+        conversations.get(envoyeur).add(msg);
     }
 
     public void setAllClient(ArrayList<Client> liste) {
@@ -176,6 +180,10 @@ public class Client implements Serializable {
     }
 
     public void addNotif(String msg) {
+        for (String m : notificationsEnAttente) {
+            if (m.equals(msg))
+                return;
+        }
         notificationsEnAttente.add(msg);
     }
 
@@ -217,6 +225,7 @@ public class Client implements Serializable {
                     openNotifs();
                     break;
                 case "3":
+                    openOptions();
                     break;
                 case "4":
                     break;
@@ -262,6 +271,38 @@ public class Client implements Serializable {
             System.out.println("Aucune notification");
         System.out.println("\n\n");
         viderNotifs();
+    }
+
+    public void openOptions() {
+        Scanner scanner = new Scanner(System.in);
+        String input = "";
+
+        for (int i = 0; i < 2; i++) {
+            System.out.println("==========Options==========\n");
+            System.out.println("Nom : " + nom);
+            System.out.println("Prenom : " + prenom);
+            System.out.print("Modifier(o/n) : ");
+            input = scanner.nextLine();
+            if (input.equals("o")) {
+                System.out.println("1: Modifier nom");
+                System.out.println("2: Modifier prenom");
+                System.out.print(">");
+                input = scanner.nextLine();
+                switch (input) {
+                    case "1":
+                        System.out.print("Nouveau nom : ");
+                        nom = scanner.nextLine();
+                        break;
+                    case "2":
+                        System.out.print("Nouveau prenom : ");
+                        prenom = scanner.nextLine();
+                        break;
+                    default:
+                        break;
+                }
+            }
+        }
+        push();
     }
 
     @Override

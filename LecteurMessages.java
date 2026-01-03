@@ -1,3 +1,5 @@
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 
 public class LecteurMessages implements Runnable {
@@ -34,6 +36,10 @@ public class LecteurMessages implements Runnable {
                         System.out.print(">");
                         break;
 
+                    case "102_NOTIF_SANS_NOTIF":
+                        client.addNotif((String) p.contenu);
+                        break;
+
                     case "300_REP": // Réponse à la demande de liste
                         @SuppressWarnings("unchecked")
                         ArrayList<Client> liste = (ArrayList<Client>) p.contenu;
@@ -45,16 +51,21 @@ public class LecteurMessages implements Runnable {
                         System.exit(0);
 
                     case "500_REP": // Un message de chat
-                        Message msg = (Message) p.contenu;
+                        Message<String> msg = (Message<String>) p.contenu;
                         client.addConv(msg.getEnvoyeur());
-                        client.getConv().get(msg.getEnvoyeur()).add(msg);
+                        client.addMessage(msg.getEnvoyeur(), msg);
                         if (Chat.active) {
                             System.out.println(
-                                    "\r" + Couleur.BLEU + msg.getEnvoyeur() + Couleur.RESET + ":" +
+                                    "\r" + Couleur.BLEU + msg.getId() + Couleur.RESET + ":" +
                                             msg.getMessage());
                             System.out.print(">");
-
                         }
+                        break;
+
+                    case "501_REP":
+                        Message<byte[]> msgFichier = (Message<byte[]>) p.contenu;
+                        byte[] fichier = msgFichier.getMessage();
+                        Files.write(Paths.get("CLIENT/" + client.getTel() + "/image_recu.jpg"), fichier);
                         break;
                 }
             }

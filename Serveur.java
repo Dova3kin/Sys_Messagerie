@@ -13,7 +13,6 @@ class Serveur {
     private static ArrayList<Client> clients = new ArrayList<>();
     private static List<GestionUtilisateur> observateurs = new CopyOnWriteArrayList<>();
 
-    @SuppressWarnings("unchecked")
     private static void loadClient() {
         File fichier = new File("SERVEUR/clients.ser");
         if (fichier.exists()) {
