@@ -13,7 +13,7 @@ public class LecteurMessages implements Runnable {
     public void run() {
         try {
             while (true) {
-                Paquet p = (Paquet) client.getResponseServeru().readObject();
+                Paquet p = (Paquet) client.getResponseServeur().readObject();
                 switch (p.code) {
                     case "101_REP":
                         client.setCodeInscriptionRecu((String) p.contenu);
@@ -69,9 +69,8 @@ public class LecteurMessages implements Runnable {
                         break;
                 }
             }
-        } catch (
-
-        Exception e) {
-            /* ... */ }
+        } catch (Exception e) {
+            System.err.println(e.getMessage());
+        }
     }
 }

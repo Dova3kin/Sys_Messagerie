@@ -5,6 +5,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Map;
+import java.util.NoSuchElementException;
 import java.util.Scanner;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -174,7 +175,7 @@ public class Client implements Serializable {
         this.codeInscriptionRecu = code;
     }
 
-    public ObjectInputStream getResponseServeru() {
+    public ObjectInputStream getResponseServeur() {
         return reponseServeur;
     }
 
@@ -215,21 +216,25 @@ public class Client implements Serializable {
             System.out.println("3 : Options");
             System.out.println("4 : Déconnexion");
             System.out.print(">");
-            input = scanner.nextLine();
-            switch (input) {
-                case "1":
-                    message();
-                    break;
-                case "2":
-                    openNotifs();
-                    break;
-                case "3":
-                    openOptions();
-                    break;
-                case "4":
-                    break;
-                default:
-                    break;
+            try {
+                input = scanner.nextLine();
+                switch (input) {
+                    case "1":
+                        message();
+                        break;
+                    case "2":
+                        openNotifs();
+                        break;
+                    case "3":
+                        openOptions();
+                        break;
+                    case "4":
+                        break;
+                    default:
+                        break;
+                }
+            } catch (NoSuchElementException nsee) {
+                break;
             }
         }
     }
@@ -299,6 +304,8 @@ public class Client implements Serializable {
                     default:
                         break;
                 }
+            } else {
+                break;
             }
         }
         push();

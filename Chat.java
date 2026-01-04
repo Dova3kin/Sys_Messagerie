@@ -1,5 +1,6 @@
 import java.io.IOException;
 import java.nio.file.Files;
+import java.nio.file.NoSuchFileException;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Scanner;
@@ -52,11 +53,9 @@ public class Chat {
                 }
                 c.setAllClient(null);
             }
-        } catch (
-
-        Exception e) {
-            System.out.println("Open Chat error : ");
-            e.printStackTrace();
+        } catch (NoSuchFileException nsfe) {
+            System.out.println("Fichier introuvable");
+        } catch (Exception e) {
         } finally {
             active = "";
             ;
@@ -88,7 +87,6 @@ public class Chat {
                             clientsSansChat.add(c);
                         }
                     }
-
                     System.out.println(":R -> Retour");
                     System.out.print(">");
 
@@ -96,7 +94,6 @@ public class Chat {
                     if (!input.equals(":R")) {
                         String destinataire = clientsSansChat.get(Integer.parseInt(input) - 1).getTel();
                         active = destinataire;
-
                         System.out.println("Chat avec " + destinataire + "\n---------------------------\n\n");
                         c.addConv(destinataire);
                         gestionMessage(input, destinataire, scanner);
@@ -105,8 +102,9 @@ public class Chat {
                 }
             }
             c.setAllClient(null);
+        } catch (NoSuchFileException nsfe) {
+            System.out.println("Fichier introuvable");
         } catch (Exception e) {
-            System.out.println("createChat error : " + e.getMessage());
         } finally {
             active = "";
 
@@ -129,7 +127,7 @@ public class Chat {
                 try {
                     Files.write(Paths.get("CLIENT/" + c.getTel() + "image_recu.jpg"), (byte[]) msg.getMessage());
                 } catch (IOException e) {
-                    e.printStackTrace();
+                    System.err.println(e.getMessage());
                 }
             }
         }

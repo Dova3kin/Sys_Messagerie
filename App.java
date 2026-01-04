@@ -7,7 +7,7 @@ public class App {
         try {
             Thread.sleep(i);
         } catch (Exception e) {
-            System.out.println(e.getMessage());
+            System.err.println(e.getMessage());
         }
     }
 

@@ -135,18 +135,6 @@ public class GestionUtilisateur implements Runnable {
                         Serveur.saveAll();
                     }
                     break;
-                case "502":
-                    msgFichier = (Message<byte[]>) demande.contenu;
-                    destinataire = clientsCo.get(msgFichier.getDestinataire());
-                    if (destinataire != null) { // si le destinataire est connecté
-                        Paquet p = new Paquet("501_REP", msgFichier);
-                        synchronized (destinataire) {
-                            destinataire.writeObject(p);
-                            destinataire.flush();
-                            destinataire.reset();
-                        }
-                    }
-                    break;
             }
             reponseServeur.flush();
             reponseServeur.reset();
